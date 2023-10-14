@@ -35,6 +35,7 @@ runs:
     with:
       inlineScript: |
          echo 'RESOURCE_GROUP_NAME=${{ inputs.resourceGroupName }}' >> $GITHUB_ENV
+         echo 'REGISTRY_SERVER_NAME=${{ inputs.registryServerName }}' >> $GITHUB_ENV
          echo 'DOCKER_IMAGE_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
          echo 'CONTAINER_APP_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
          echo 'CONTAINER_LOG_NAME=${{ inputs.containerLogName }}' >> $GITHUB_ENV

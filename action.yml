@@ -1,0 +1,86 @@
+name: Azure Container Apps Deploy by MDP
+branding:
+  icon: truck
+  color: red
+author: Clark159
+description: GitHub Action for Deploying Azure Container Apps
+
+inputs:
+  resourceGroupName:
+    description: 'Resource Group Name'
+    required: true
+
+  registryServerName:
+    description: 'Registry Server Name'
+    required: true
+
+  containerAppName:
+    description: 'Container App Name'
+    required: true
+
+  containerLogName:
+    description: 'container Log Name'
+    required: true
+
+  containerEnvName:
+    description: 'Container Environment Name'
+    required: true
+    
+runs:
+  using: composite
+  steps:
+  
+  # Azure Container Registry Build by MDPOps
+  - name: Configure Environment Variables
+    uses: azure/CLI@v1
+    with:
+      inlineScript: |
+         echo 'RESOURCE_GROUP_NAME=${{ inputs.resourceGroupName }}' >> $GITHUB_ENV
+         echo 'REGISTRY_SERVER_NAME=${{ inputs.registryServerName }}' >> $GITHUB_ENV
+         echo 'CONTAINER_APP_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
+         echo 'CONTAINER_LOG_NAME=${{ inputs.containerLogName }}' >> $GITHUB_ENV
+         echo 'CONTAINER_ENV_NAME=${{ inputs.containerEnvName }}' >> $GITHUB_ENV
+
+  - name: Deploy Azure Container Registry
+    uses: azure/CLI@v1
+    with:
+      inlineScript: |
+         az acr build \
+           --registry ${{ env.REGISTRY_SERVER_NAME }} \
+           --file ${{ env.DOCKER_FILE_PATH }} \
+           --image ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
+
+  # Azure Container Apps Deploy by MDPOps
+  - name: Configure Azure CLI
+    uses: azure/CLI@v1
+    with:
+      inlineScript: |
+        az configure --defaults location=$(az group show --name ${{ env.RESOURCE_GROUP_NAME }} --query location -o tsv)
+
+  - name: Configure Azure Container Registry
+    uses: azure/CLI@v1
+    with:
+      inlineScript: |
+        az acr update --name ${{ env.REGISTRY_SERVER_NAME }} --admin-enabled true
+
+  - name: Configure Azure Log Analytics
+    uses: azure/CLI@v1
+    with:
+      inlineScript: |
+        az monitor log-analytics workspace create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.LOG_ANALYTICS_NAME }}
+        echo 'LOG_ANALYTICS_ID=$(az monitor log-analytics workspace show --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.LOG_ANALYTICS_NAME }} --query customerId -o tsv)' >> $GITHUB_ENV
+        echo 'LOG_ANALYTICS_KEY=$(az monitor log-analytics workspace get-shared-keys --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.LOG_ANALYTICS_NAME }} --query primarySharedKey -o tsv)' >> $GITHUB_ENV
+ 
+  - name: Deploy Azure Container Apps
+    uses: azure/CLI@v1
+    with:
+      inlineScript: |
+        az containerapp up \
+          --name ${{ env.CONTAINER_APP_NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+          --environment ${{ env.CONTAINER_ENV_NAME }} \
+          --logs-workspace-id ${{ env.LOG_ANALYTICS_ID }} \
+          --logs-workspace-key ${{ env.LOG_ANALYTICS_KEY }} \
+          --image ${{ env.REGISTRY_SERVER_NAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} \
+          --ingress external \
+          --target-port 80

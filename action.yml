@@ -7,7 +7,7 @@ description: GitHub Action for Deploying Azure Container Apps
 
 inputs:
   resourceGroupName:
-    description: 'Resource Group Name'
+    description: Resource Group Name
     required: true
     
   registryServerName:
@@ -19,15 +19,15 @@ inputs:
     required: true
 
   containerAppName:
-    description: 'Container App Name'
+    description: Container App Name
     required: true
 
   containerLogName:
-    description: 'container Log Name'
+    description: container Log Name
     required: true
 
   containerEnvName:
-    description: 'Container Environment Name'
+    description: Container Environment Name
     required: true
     
 runs:

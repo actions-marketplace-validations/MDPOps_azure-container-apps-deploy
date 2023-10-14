@@ -9,9 +9,13 @@ inputs:
   resourceGroupName:
     description: 'Resource Group Name'
     required: true
-
+    
   registryServerName:
-    description: 'Registry Server Name'
+    description: Registry Server Name
+    required: true
+
+  dockerImageName:
+    description: Docker Image Name
     required: true
 
   containerAppName:
@@ -36,7 +40,7 @@ runs:
       inlineScript: |
          echo 'RESOURCE_GROUP_NAME=${{ inputs.resourceGroupName }}' >> $GITHUB_ENV
          echo 'REGISTRY_SERVER_NAME=${{ inputs.registryServerName }}' >> $GITHUB_ENV
-         echo 'DOCKER_IMAGE_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
+         echo 'DOCKER_IMAGE_NAME=${{ inputs.dockerImageName }}' >> $GITHUB_ENV
          echo 'CONTAINER_APP_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
          echo 'CONTAINER_LOG_NAME=${{ inputs.containerLogName }}' >> $GITHUB_ENV
          echo 'CONTAINER_ENV_NAME=${{ inputs.containerEnvName }}' >> $GITHUB_ENV

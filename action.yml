@@ -29,28 +29,17 @@ inputs:
 runs:
   using: composite
   steps:
-  
-  # Azure Container Registry Build by MDPOps
+
   - name: Configure Environment Variables
     uses: azure/CLI@v1
     with:
       inlineScript: |
          echo 'RESOURCE_GROUP_NAME=${{ inputs.resourceGroupName }}' >> $GITHUB_ENV
-         echo 'REGISTRY_SERVER_NAME=${{ inputs.registryServerName }}' >> $GITHUB_ENV
+         echo 'DOCKER_IMAGE_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
          echo 'CONTAINER_APP_NAME=${{ inputs.containerAppName }}' >> $GITHUB_ENV
          echo 'CONTAINER_LOG_NAME=${{ inputs.containerLogName }}' >> $GITHUB_ENV
          echo 'CONTAINER_ENV_NAME=${{ inputs.containerEnvName }}' >> $GITHUB_ENV
-
-  - name: Deploy Azure Container Registry
-    uses: azure/CLI@v1
-    with:
-      inlineScript: |
-         az acr build \
-           --registry ${{ env.REGISTRY_SERVER_NAME }} \
-           --file ${{ env.DOCKER_FILE_PATH }} \
-           --image ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} .
-
-  # Azure Container Apps Deploy by MDPOps
+         
   - name: Configure Azure CLI
     uses: azure/CLI@v1
     with:
@@ -67,9 +56,9 @@ runs:
     uses: azure/CLI@v1
     with:
       inlineScript: |
-        az monitor log-analytics workspace create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.LOG_ANALYTICS_NAME }}
-        echo 'LOG_ANALYTICS_ID=$(az monitor log-analytics workspace show --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.LOG_ANALYTICS_NAME }} --query customerId -o tsv)' >> $GITHUB_ENV
-        echo 'LOG_ANALYTICS_KEY=$(az monitor log-analytics workspace get-shared-keys --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.LOG_ANALYTICS_NAME }} --query primarySharedKey -o tsv)' >> $GITHUB_ENV
+        az monitor log-analytics workspace create --resource-group ${{ env.RESOURCE_GROUP_NAME }} --workspace-name ${{ env.CONTAINER_LOG_NAME }}
+        echo 'LOG_ANALYTICS_ID=$(az monitor log-analytics workspace show --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.CONTAINER_LOG_NAME }} --query customerId -o tsv)' >> $GITHUB_ENV
+        echo 'LOG_ANALYTICS_KEY=$(az monitor log-analytics workspace get-shared-keys --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.CONTAINER_LOG_NAME }} --query primarySharedKey -o tsv)' >> $GITHUB_ENV
  
   - name: Deploy Azure Container Apps
     uses: azure/CLI@v1
